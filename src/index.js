@@ -57,6 +57,7 @@ io.on('connection', (socket) => {
     installation page. The server stores the socket id and the repository name 
     in `requestsReposIds` and `requestsIdsRepos`.
     */
+    
     socket.on('installation-requested', (data) => {
         var repository = data['owner'].toLowerCase() + '/' + data['repo'].toLowerCase();
         requestsReposIds[repository] = socket.id; // store socket id and repo
@@ -65,7 +66,19 @@ io.on('connection', (socket) => {
         console.log(`socket with ID ${socket.id} is waiting for installation of ${repository}`)
        
     });
-})
+
+    // disconnection
+    /* On disconnection, delete the socket id and the repository name from the dictionaries,
+    since those are no longer "active installations".
+    */
+    socket.on('disconnect', (socket) => {
+        console.log(`Socket ${socket.id} disconnected`);
+        var repository = requestsIdsRepos[socket.id];
+        delete requestsIdsRepos[socket.id];
+        delete requestsReposIds[repository];
+        console.log(`Deleted socket ${socket.id} and repository ${repository} from dictionaries`);
+    });
+});
 
 
 // post-installation
@@ -90,16 +103,4 @@ app.post('/payloads', (req, res) => {
         }
     }
 });
-
-// disconnection
-/* On disconnection, delete the socket id and the repository name from the dictionaries,
-since those are no longer "active installations".
-*/
-io.on('disconnect', (socket) => {
-    console.log(`Disconnected: ${socket.id}, which requested installation for ${requestsIdsRepos[socket.id]}`);
-    var repo = requestsIdsRepos[socket.id];
-    delete requestsReposIds[repo]; // delete socket id
-    delete requestsIdsRepos[socket.id]; // delete repo
-})
-
 
