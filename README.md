@@ -29,6 +29,100 @@ This exposes the app in a public URL (https://9956-84-88-188-110.ngrok-free.app 
 
 ## Interaction with GitHub APIs
 
+### GraphQL API
+
+The GraphQL API is used to get information about the repositories that have installed the FAIR4S Evaluator GitHub App. The GraphQL API is used to get the following information:
+    - collaborators 
+    - contactLinks
+    - description 
+    - descriptionHTML
+    - homepageUrl
+    - labels 
+    - repositoryTopics
+    - languages
+    - primaryLanguage 
+    - licenseInfo
+    - packages
+    - releases
+    - submodules
+    - visibility
+
+An example of query for repository `evamart/mkdocs-template` is:
+
+```graphql
+{
+  repository(owner: "evamart", name: "mkdocs-template") {
+    description
+    descriptionHTML
+    homepageUrl
+    isDisabled
+    isEmpty
+    isFork
+    isInOrganization
+    isLocked
+    isMirror
+    isPrivate
+    isTemplate
+    latestRelease {
+      name
+      tagName
+    }
+    licenseInfo {
+      id
+      name
+      spdxId
+      url
+    }
+    name
+    mirrorUrl
+    packages(first: 10) {
+      edges {
+        node {
+          id
+          name
+          packageType
+          version(version: "") {
+            version
+            summary
+          }
+        }
+      }
+    }
+    releases(first: 10) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+    url
+    repositoryTopics(first: 10) {
+      nodes {
+        url
+        topic {
+          id
+          name
+        }
+      }
+    }
+    collaborators(affiliation: ALL, first: 10) {
+      nodes {
+        email
+        company
+        id
+        name
+        websiteUrl
+        url
+      }
+    }
+  }
+}
+```
+
+The result can be seen [here](./docs/metadataExample.json). 
+
+> The query can be tested in the [GitHub GraphQL API Explorer](https://developer.github.com/v4/explorer/).
+
 ## GitHub App Webhook
 Whenever a repository installs, unistalls or modifies in any way its permissions to the FAIR4S Evaluator App, the GitHub app sends a webhook to the FAIR4S Evaluator API. 
 The webhok configuration is set in the [app settings](https://github.com/settings/apps/fair4s-evaluator-test): 
