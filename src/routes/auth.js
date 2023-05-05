@@ -25,7 +25,9 @@ module.exports = {
         // Returns an authenticated instance of octokit
 
         // Create a personal access token at https://github.com/settings/tokens/new?scopes=repo
-        const octokit = await new Octokit({ auth: "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" });
+        // Set the GITHUB_TOKEN environment variable on your system before running the code.
+        
+        const octokit = await new Octokit({ auth: "" });
         return octokit;
     },
 
