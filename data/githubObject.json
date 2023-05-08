@@ -1,0 +1,56 @@
+{
+    "data": {
+      "repository": {
+        "description": "Description of the FAIRsoft indicators, measured by the OpenEBench Software Observatory (https://openebench.bsc.es/).",
+        "descriptionHTML": "<div>Description of the FAIRsoft indicators, measured by the OpenEBench Software Observatory (<a href=\"https://openebench.bsc.es/\" rel=\"nofollow\">https://openebench.bsc.es/</a>).</div>",
+        "homepageUrl": "https://evamart.github.io/mkdocs-template/",
+        "isDisabled": false,
+        "isEmpty": false,
+        "isFork": false,
+        "isInOrganization": false,
+        "isLocked": false,
+        "isMirror": false,
+        "isPrivate": false,
+        "isTemplate": false,
+        "latestRelease": null,
+        "licenseInfo": {
+          "id": "MDc6TGljZW5zZTEz",
+          "name": "MIT License",
+          "spdxId": "MIT",
+          "url": "http://choosealicense.com/licenses/mit/"
+        },
+        "name": "mkdocs-template",
+        "mirrorUrl": null,
+        "packages": {
+          "edges": []
+        },
+        "releases": {
+          "edges": []
+        },
+        "url": "https://github.com/EvaMart/mkdocs-template",
+        "repositoryTopics": {
+          "nodes": [
+            {
+              "url": "https://github.com/topics/fair",
+              "topic": {
+                "id": "MDU6VG9waWNmYWly",
+                "name": "fair"
+              }
+            }
+          ]
+        },
+        "collaborators": {
+          "nodes": [
+            {
+              "email": "eva.martin@bsc.es",
+              "company": "Barcelona Supercomputing Center - INB (@inab )",
+              "id": "MDQ6VXNlcjExNDEyODI5",
+              "name": "Eva Martin del Pico",
+              "websiteUrl": null,
+              "url": "https://github.com/EvaMart"
+            }
+          ]
+        }
+      }
+    }
+  }
