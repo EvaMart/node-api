@@ -3,13 +3,20 @@ const router = Router();
 const { Octokit, App  } = require('octokit');
 var  { personalAccessToken , authApp }  = require('./auth');
 
-async function getRepositoryMetadata(octokit, owner, repo){
+
+async function queryRepositoryObject(octokit, owner, repo){
     // Use the Explorer to build the GraphQL query: https://docs.github.com/en/graphql/overview/explorer
     const { repository } = await octokit.graphql(
-    `
-        {
+        `
+        {    
             repository(owner: "${owner}", name: "${repo}") {
             
+            collaborators {
+                nodes {
+                    email
+                    name
+                }
+                }
             description
             descriptionHTML
             homepageUrl
@@ -34,8 +41,7 @@ async function getRepositoryMetadata(octokit, owner, repo){
             name
             mirrorUrl
             packages(first: 10) {
-                edges {
-                node {
+                nodes {
                     id
                     name
                     packageType
@@ -44,13 +50,13 @@ async function getRepositoryMetadata(octokit, owner, repo){
                     summary
                     }
                 }
-                }
             }
-            releases(first: 10) {
-                edges {
-                node {
+            releases(last: 10) {
+                nodes {
                     id
-                }
+                    tagName
+                    name
+                    url
                 }
             }
             url
@@ -68,17 +74,65 @@ async function getRepositoryMetadata(octokit, owner, repo){
     `
     );
 
+    // transform data to the observatory metadata schema
     return repository;
 
 }
 
+
+function githubMetadata(ghObject){
+    console.log('hello from githubMetadata')
+    const meta = {
+        name: ghObject.name,
+        description: ghObject.description,
+        links: [
+            ghObject.homepageUrl, 
+            ghObject.mirrorUrl],
+        isDisabled: ghObject.isDisabled,
+        isEmpty: ghObject.isEmpty,
+        isLocked: ghObject.isLocked,
+        isPrivate: ghObject.isPrivate,
+        isTemplate: ghObject.isTemplate,
+        version: ghObject.releases.nodes.map((node) => node.tagName),
+        license: ghObject.licenseInfo.name,
+        licenseURL: ghObject.licenseInfo.url,
+        licenseSPDXId: ghObject.licenseInfo.spdxId,
+        repository: [ 
+            ghObject.url
+        ],
+        github_topics_urls: ghObject.repositoryTopics.nodes.map((node) => node.url),
+        github_topics_names: ghObject.repositoryTopics.nodes.map((node) => node.topic.name),
+        authors: ghObject.collaborators.nodes.map((node) => node.name)
+    }
+
+    return meta;
+
+}
+
+
+async function getRepositoryMetadata(octokit, owner, repo){
+    // Use the Explorer to build the GraphQL query: https://docs.github.com/en/graphql/overview/explorer
+    const repository = await queryRepositoryObject(octokit, owner, repo);
+    console.log('Repository object retrieved. Transforming to metadata')
+    console.log(repository)
+    const metadata = githubMetadata(repository);
+    console.log(metadata.description)
+    return metadata;
+}
+    
+       
+
 // Get metadata using app authentication and installation ID
-router.get('/metadata', (req, res) => { 
-    const { owner, repo, installationID } = req.query;
-    console.log(typeof(getInstallationOctokit));
+router.post('/metadata', (req, res) => { 
+    const { owner, repo, installationID } = req.body;
+    console.log('Authenticating app')
     authApp().then((app) => {
+        console.log('App authenticated. Getting installation octokit')
+        console.log(installationID)
         app.getInstallationOctokit(installationID).then((octokit) => {
+            console.log('Installation octokit retrieved. Getting repository metadata')
             getRepositoryMetadata(octokit, owner, repo).then((data) => {
+            console.log(data)
             res.json({
                 data: data,
                 status: 200,
@@ -130,5 +184,12 @@ router.get('/metadata/test', (req, res) => {
     });
 });
 
-
 module.exports = router;
+
+/* Only for testing purposes
+
+module.exports = githubMetadata; 
+*/
+
+
+

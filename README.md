@@ -123,6 +123,40 @@ The result can be seen [here](./docs/metadataExample.json).
 
 > The query can be tested in the [GitHub GraphQL API Explorer](https://developer.github.com/v4/explorer/).
 
+#### Transformation to Obeservatory data model 
+
+Data from GitHub is all in `data.repostory` in the GraphQL response.
+
+| GitHub API                   | Observatory data model    | Comment     |
+|------------------------------|---------------------------|-------------|
+| description (`str`)          | description (`str`)       |             |
+| homepageUrl (`str`)          | links(`list`)             |             |
+| isDisabled (`bool`)          | isDisabled (`bool`)       | NEW         |
+| isEmpty (`bool`)             | isEmpty (`bool`)          | NEW         |
+| isLocked (`bool`)            | isLocked (`bool`)         | NEW         |
+| isPrivate (`bool`)           | isPrivate (`bool`)        | NEW         |
+| isTemplate (`bool`)          | isTemplate (`bool`)       | NEW         |
+| latestRelease.tagName (`dict`) | version (`list`)        |             |
+| licenseInfo.name (`str`)     | license (`list`)          |             |
+| licenseInfo.url (`str`)      | licenseURL (`list`)       | NEW         |
+| licenseInfo.spdxId (`str`)   | licenseSPDXId (`list`)      | NEW         |
+| name (`str`)                 | name (`str`)              |             |
+| mirrorUrl (`str`)            | links(`list`)             |             |
+| packages (`list`)            | -                         | Pending     |
+| releases (`list`)            | version (`list`)          |             |
+| url (`str`)                  | repository (`list`)       |             |
+| repositoryTopics.nodes (`list`) |  -   | In github_topics* |
+| repositoryTopics.nodes[i].url (`str`) | github_topics_urls(`list`) | NEW |
+| repositoryTopics.nodes[i].topic.name (`str`) | github_topics_names(`list`) | NEW |
+| collaborators.nodes[i].name (`list`) | authors (`list`)  |             |
+| isMirror (`bool`)            | -                         | *discarded* |
+| isOrganization (`bool`)      | -                         | *discarded* |
+| isFork (`bool`)              | -                         | *discarded* |
+| descriptionHTML (`str`)      | -                         | *discarded* |
+
+
+
+
 ## GitHub App Webhook
 Whenever a repository installs, unistalls or modifies in any way its permissions to the FAIR4S Evaluator App, the GitHub app sends a webhook to the FAIR4S Evaluator API. 
 The webhok configuration is set in the [app settings](https://github.com/settings/apps/fair4s-evaluator-test): 
