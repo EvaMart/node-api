@@ -130,7 +130,7 @@ Data from GitHub is all in `data.repostory` in the GraphQL response.
 | GitHub API                   | Observatory data model    | Comment     |
 |------------------------------|---------------------------|-------------|
 | description (`str`)          | description (`str`)       |             |
-| homepageUrl (`str`)          | links(`list`)             |             |
+| homepageUrl (`str`)          | webpage(`list`)             |             |
 | isDisabled (`bool`)          | isDisabled (`bool`)       | NEW         |
 | isEmpty (`bool`)             | isEmpty (`bool`)          | NEW         |
 | isLocked (`bool`)            | isLocked (`bool`)         | NEW         |
@@ -146,8 +146,8 @@ Data from GitHub is all in `data.repostory` in the GraphQL response.
 | releases (`list`)            | version (`list`)          |             |
 | url (`str`)                  | repository (`list`)       |             |
 | repositoryTopics.nodes (`list`) |  -   | In github_topics* |
-| repositoryTopics.nodes[i].url (`str`) | github_topics_urls(`list`) | NEW |
-| repositoryTopics.nodes[i].topic.name (`str`) | github_topics_names(`list`) | NEW |
+| repositoryTopics.nodes[i].url (`str`) | topics(`list`) | NEW |
+| repositoryTopics.nodes[i].topic.name (`str`) | topics(`list`) | NEW |
 | collaborators.nodes[i].name (`list`) | authors (`list`)  |             |
 | isMirror (`bool`)            | -                         | *discarded* |
 | isOrganization (`bool`)      | -                         | *discarded* |

@@ -16,6 +16,9 @@ test('Trasformation of GitHub metadata', () => {
     expect(metadata).toEqual(
         {
             name: "mkdocs-template",
+            label: [
+                "mkdocs-template"
+            ],
             description: "Description of the FAIRsoft indicators, measured by the OpenEBench Software Observatory (https://openebench.bsc.es/).",
             links: [
                 "https://evamart.github.io/mkdocs-template/",
@@ -27,7 +30,9 @@ test('Trasformation of GitHub metadata', () => {
             isPrivate: false,
             isTemplate: false,
             latestRelease: null,
-            license: "MIT License",
+            license: [
+                "MIT License"
+            ],
             licenseURL: "http://choosealicense.com/licenses/mit/",
             licenseSPDXId: "MIT",
             repository: [
@@ -41,7 +46,34 @@ test('Trasformation of GitHub metadata', () => {
             ],
             authors: [
                 "Eva Martin del Pico"
-            ]
+            ],
+            bioschemas: false,
+            contribPolicy: false,
+            dependencies: [],
+            documentation: [],
+            download: [],
+            edam_operations: [],
+            edam_topics: [],
+            https: true,
+            input: [],
+            inst_instr: [],
+            label: [],
+            operational: false,
+            os: [],
+            output: [],
+            publication: [],
+            semantics: {
+                inputs: [],
+                outputs: [],
+                topics: [],
+                operations: [],
+            },
+            source: ['github'],
+            src: [],
+            ssl: true,
+            tags: [],
+            test: false,
+            type: null,  
         }
     )
 
