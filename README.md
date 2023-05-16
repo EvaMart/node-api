@@ -165,6 +165,78 @@ The webhok configuration is set in the [app settings](https://github.com/setting
 
 The webhook is sent to the URL xxxx/payloads. The webhook is sent in JSON format.
 
+## Exporting CodeMeta to repository 
+This API is able to export metadata to a GitHub repository (with the appropriate permissions) in CodeMeta format. The CodeMeta file is stored in the root of the repository. The way this is done is by creating a new branch in the repository and pushing the CodeMeta file to that branch. Then a pull request is created to merge the new branch into the main branch. 
+The GitHub API endpoints used are:
+- Get SHA of the main branch. This is needed to create the new branch from the main branch. 
+
+```
+GET /repos/{owner}/{repo}/branches
+``` 
+
+```js
+octokit.request('GET /repos/{owner}/{repo}/branches', {
+  owner: 'owner',
+  repo: 'repo',
+})
+```
+
+- Create a new branch from the main branch. 
+
+```
+POST https://api.github.com/repos/{owner}/{repo}/git/refs
+```
+
+```js
+octokit.request('POST https://api.github.com/repos/{owner}/{repo}/git/refs',{
+                owner: owner,
+                repo: repo,
+                ref: "refs/heads/evaluator",
+                sha: "121d25f82ea40d0a3a33c79d195d5d5f8a2843bc", 
+            })
+```
+
+- Create a new file in the new branch. We assume that the CodeMeta file is stored in a variable called `codemeta` (using base64 encoding ). 
+
+```
+PUT /repos/{owner}/{repo}/contents/{path}
+```
+```js
+octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+                owner: owner,
+                repo: repo,
+                path: 'test.md',
+                branch: 'evaluator',
+                message: 'my commit message',
+                committer: {
+                  name: 'Evaluator',
+                  email: 'evaluator@gmail.com'
+                },
+                content: codemeta
+            })
+```
+
+- Create a pull request to merge the new branch into the main branch. 
+
+```
+POST /repos/{owner}/{repo}/pulls
+```
+```js
+octokit.request('POST /repos/{owner}/{repo}/pulls',{
+                owner: owner,
+                repo: repo,
+                title: 'Test pull request',
+                head: 'evaluator',
+                base: 'master',
+                body: 'This is a test pull request',
+                accept: 'application/vnd.github+json'
+                }
+            )
+```
+
+
+
+
 ## Socket.io 
 
 ## Redis 

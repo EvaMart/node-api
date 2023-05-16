@@ -4,6 +4,11 @@ const { Octokit, App  } = require('octokit');
 var  { personalAccessToken , authApp }  = require('./auth');
 const jsonld = require('jsonld');
 
+
+/* ---------------------------------- */
+/*          POST /metadata            */
+/* -----------------------------------*/
+
 async function queryRepositoryObject(octokit, owner, repo){
     // Use the Explorer to build the GraphQL query: https://docs.github.com/en/graphql/overview/explorer
     const { repository } = await octokit.graphql(
@@ -264,35 +269,9 @@ router.post('/metadata', (req, res) => {
 
 });
 
-
-router.post('/pullrequest', (req, res) => {
-    const { owner, repo, installationID } = req.body;
-    console.log('Authenticating app')
-    authApp().then((app) => {
-        app.getInstallationOctokit(installationID).then((octokit) => {
-            console.log('Making request')
-            octokit.request('POST /repos/{owner}/{repo}/pulls',{
-                owner: owner,
-                repo: repo,
-                title: 'Test pull request',
-                head: 'test-branch',
-                base: 'main',
-                body: 'This is a test pull request',
-                accept: 'application/vnd.github+json',
-                headers: {
-                    'X-GitHub-Api-Version': '2022-11-28'
-                  }
-            }).then((response) => {
-                console.log(response)
-                res.json({
-                    data: response,
-                    status: 200,
-                });
-            })
-        });
-    });
-
-})
+/* ----------------------------------------- */
+/*          GET  /metadata/codemeta          */
+/* ----------------------------------------- */
 
 function generateAuthors(metadata){
     /*
@@ -331,17 +310,20 @@ function getBuildInstructions(documentation){
 // get build instructions from documentation
 }
 
-
-// Generate Codemeta
-router.post('/metadata/codemeta', (req, res) => {
-    const metadata = req.body;
-
+function generateCodeMeta(metadata){
+    var codemeta = {
+        '@context': 'https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld',
+        '@type': 'SoftwareApplication',
+        name: metadata.name,
+        description: metadata.description[0]
+    }
+    /*
     var codemeta = {
         '@context': 'https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld',
         '@type': 'SoftwareApplication',
         name: metadata.name,
         description: metadata.description[0],
-        author: generateAuthors(metadata),
+        //author: generateAuthors(metadata),
         license: "", // URL or SPDX identifier
         url: metadata.webpage[0],
         codeRepository: metadata.repository[0],
@@ -349,98 +331,226 @@ router.post('/metadata/codemeta', (req, res) => {
         applicationCategory: metadata.type,
         downloadURL: metadata.download,
         operatingSystem: metadata.os,
-        softwareHelp: generateDocumentation(metadata),
+        //softwareHelp: generateDocumentation(metadata),
         softwareRequirements: metadata.dependencies,
         softwareVersion: metadata.version[0],
-        readme: getReadme(metadata.documentation),
+        //readme: getReadme(metadata.documentation),
         isAccessibleForFree: '',
         // supportingData: https://schema.org/DataFeed // TODO may need to rescue data type
         // Data formats 
         mantainer: "", // TODO
-        buildInstructions: getBuildInstructions(metadata), // TODO
+        //buildInstructions: getBuildInstructions(metadata), // TODO
     }
+    */
+    return codemeta;
+}
+
+
+// Generate Codemeta
+router.post('/metadata/codemeta', (req, res) => {
+    const metadata = req.body;
+
+    try {
+        var codemeta = generateCodeMeta(metadata);
+    } catch (e) {
+        const resp = {
+            status: e.status,
+            message: e.message,
+        }
+        res.send(resp);
+    } finally{
+        const resp = {
+            status: 200,
+            message: 'OK',
+            codemeta: codemeta
+        }
+        res.send(resp);
+    }
+    
 });
 
 
-async function compact(doc, context){
-    const compacted = await jsonld.compact(doc, context);
-    return compacted;
-}
-
-// Recontextualize metadata example
-router.post('/recontextualize/example', (req, res) => {
-    
-    const doc = {
-        "http://schema.org/name": "Manu Sporny",
-        "http://schema.org/url": {"@id": "http://manu.sporny.org/"},
-        "http://schema.org/image": {"@id": "http://manu.sporny.org/images/manu.png"}
-    };
-    const context = {
-        "name": "http://schema.org/name",
-        "homepage": {"@id": "http://schema.org/url", "@type": "@id"},
-        "image": {"@id": "http://schema.org/image", "@type": "@id"}
-    };
-
-    // compact a document according to a particular context
-    compact(doc, context).then(
-        (compacted) => {
-            res.json({
-                data: compacted,
-                status: 200,
-            });
-        },
-    ).catch((error) => {
-        res.json({
-            data: null,
-            status: error.status,
-            message: error.message,
-        });
-    }
-    );
-
-})
 
 
-async function expand(compacted){
-    const expanded = await jsonld.expand(compacted);
-    return expanded;
-}
+/* ------------------------------------------- */
+/*           POST /metadata/pull               */
+/* --------------------------------------------*/
 
-router.post('/expand', (req, res) => {
-    const compacted = req.body;
+async function getOctokit(installationID){
     /*
-    const compacted = {
-		"@context": {
-			"name": "http://schema.org/name",
-			"homepage": {
-				"@id": "http://schema.org/url",
-				"@type": "@id"
-			},
-			"image": {
-				"@id": "http://schema.org/image",
-				"@type": "@id"
-			}
-		},
-		"image": "http://manu.sporny.org/images/manu.png",
-		"name": "Manu Sporny",
-		"homepage": "http://manu.sporny.org/"
-	};
+    Get an octokit instance using app authentication
     */
-    expand(compacted).then(
-        (expanded) => {
-            res.json({
-                data: expanded,
-                status: 200,
-            });
+    const app = await authApp();
+    const octokit = await app.getInstallationOctokit(installationID);
+    return octokit;
+}
+
+
+function jsonToBase64(object) {
+    /*
+    Transform a JSON object to a base64 string
+    */
+    const json = JSON.stringify(object);
+    return Buffer.from(json).toString("base64");
+  }
+
+async function getSHAofMaster(octokit, owner, repo){
+    /*
+    Get the SHA of the master branch
+    Get all branches and look for the one named master or main
+    Returns the SHA of the master branch, the name of the branch and all the branch names
+    */
+    const resp = await octokit.request('GET /repos/{owner}/{repo}/branches', {
+        owner: owner,
+        repo: repo,
+    })
+
+    const branches = resp.data;
+    const all_branch_names = branches.map((branch) => branch.name);
+    for (const branch of branches) {
+        if (branch.name == 'master' || branch.name == 'main'){
+            console.log('SHA of master branch: ' + branch.commit.sha)
+            return { 
+                masterSHA : branch.commit.sha,
+                branchName : branch.name,
+                allBranchNames : all_branch_names
+        };
         }
-    ).catch((error) => {
-        res.json({
-            data: null,
-            status: error.status,
-            message: error.message,
-        });
-    });
+    }
+    return null;
+  }
+
+function generateBranchName(branches){
+    // look for 'evaluator' and 'evaluator-n' branches.
+    const re = new RegExp("^evaluator(-[0-9]+)?$");
+    const evaluator_branches = branches.allBranchNames.filter((branch) => re.test(branch));
+    if(evaluator_branches.length != 0){
+        // get number group
+        const re2 = new RegExp("^evaluator(-([0-9]+))?$");
+        var numbers = evaluator_branches.map((branch) => re2.exec(branch)[2]);
+        // remove nulls
+        numbers = numbers.filter((number) => number != undefined);
+        // select biggest number
+        const max_number = Math.max(...numbers);
+        // add 1
+        const new_number = max_number + 1;
+        return 'evaluator-' + new_number;
+    }else{
+        return 'evaluator-1';
+    }
+}
+
+async function createBranch(octokit, owner, repo, branchName, sha){
+    /*
+    Create a new branch from master
+    ref: ref of the new branch. Example: refs/heads/my-new-branch
+    sha: SHA of the commit to branch from (master/main)
+    */
+
+    const resp = await octokit.request('POST https://api.github.com/repos/{owner}/{repo}/git/refs',{
+        owner: owner,
+        repo: repo,
+        ref: "refs/heads/" + branchName,
+        sha: sha, 
+    })
+    return resp;
+}
+
+async function createFile(octokit, owner, repo, branchName, path, content, message){
+    /*
+    Create a new file in a branch
+    */
+    const resp = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
+        owner: owner,
+        repo: repo,
+        path: path,
+        branch: branchName,
+        message: message,
+        committer: {
+          name: 'Evaluator',
+          email: 'evaluator@oeb.es'
+        },
+        content: content // The new file content, using Base64 encoding. https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents
+    })
+
+    return resp
+}
+
+async function createPullRequest(octokit, owner, repo, head, base,title, body){
+    /*
+    Create a new pull request
+    */
+    const resp = await octokit.request('POST /repos/{owner}/{repo}/pulls',{
+        owner: owner,
+        repo: repo,
+        title: title,
+        head: head,
+        base: base,
+        body: body,
+        accept: 'application/vnd.github+json'
+    })
+    return resp;
+};
+
+
+router.post('/pullrequest', async (req, res) => {
+    /* 
+    This endpoint creates a new pull request with the codemeta file. It does:
+    1. Get content to add.
+    2. Get SHA of master branch (name: master or main).
+    3. Create a new branch from master.
+    4. Add files to branch and commit:
+    5. Create pull request
+    */
+
+    const { owner, repo, installationID, metadata } = req.body;
+
+    try{
+        const codemeta = generateCodeMeta(metadata);
+        const content = jsonToBase64(codemeta);
+ 
+        const octokit = await getOctokit(installationID);
+
+        const branches = await getSHAofMaster(octokit, owner, repo);
+        const sha = branches.masterSHA;
+        const baseBranch = branches.branchName;
+        const newBranchName = generateBranchName(branches)
+    
+        await createBranch(octokit, owner, repo, newBranchName, sha);
+  
+        await createFile(octokit, owner, repo, newBranchName, 'test2.md', content, 'test');
+
+        const pullrequest = await createPullRequest(octokit, 
+            owner, 
+            repo, 
+            newBranchName, 
+            baseBranch, 
+            'test pull request',
+            'test pull request body'
+            );
+
+        resp = {
+            status: 200,
+            message: 'OK',
+            new_branch_name: newBranchName,
+            head_branch_name: baseBranch,
+            pullrequest_message: pullrequest
+            }
+
+    }catch(e){
+        resp = {
+            status: e.status,
+            message: e.message
+        }
+        
+    } finally {
+        res.send(resp);
+    }
+    
 })
+
+
+
 
 ////////
 // Test getting metadata (using personal access token)
