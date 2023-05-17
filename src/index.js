@@ -82,7 +82,7 @@ io.on('connection', (socket) => {
 
 
 // post-installation
-/* This event is a webhoos sent by GitHub when something changes in the app instalation,
+/* This event is a webhooks sent by GitHub when something changes in the app instalation,
 like when it is installed in a repository or when it is uninstalled. 
 This event is configured in the GitHub app settings (Webhook).
 */
