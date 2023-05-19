@@ -90,7 +90,7 @@ function removeNull(array){
 
 function buildTopics(githubObject){
     /*
-    For each topic in the github object, generate an item in the topics array
+    For the license in the github object, generate an item in the topics array
     {
         "vocabulary": "EDAM",
         "term": "Topic",
@@ -109,6 +109,40 @@ function buildTopics(githubObject){
     return topics;
 }
 
+function buildAuthors(githubObject){
+    /*
+    For each collaborator in the github object, generate an object in the authors array
+    {
+        "name": "John Doe",
+        "email": "",
+    }
+    */
+    var authors = [];
+    githubObject.collaborators.nodes.forEach((node) => {
+        var item = {
+            name: node.name,
+            email: node.email
+        }
+        authors.push(item);
+    });
+    return authors;
+}
+
+
+function buildLicense(githubObject){
+    /*
+    For each license in the github object, generate an object in the license array
+    {
+        "name": "MIT License",
+        "url" : "https://opensource.org/licenses/MIT",
+    }
+    */
+    var licenses = [{
+        name: githubObject.licenseInfo.name,
+        url: githubObject.licenseInfo.url
+    }]
+    return licenses;
+}
 
 function githubMetadata(ghObject){
     console.log('hello from githubMetadata')
@@ -132,24 +166,16 @@ function githubMetadata(ghObject){
         isPrivate: ghObject.isPrivate,
         isTemplate: ghObject.isTemplate,
         version: ghObject.releases.nodes.map((node) => node.tagName),
-        license: removeNull([
-            ghObject.licenseInfo.name
-        ]),
-        licenseURL: removeNull([ 
-            ghObject.licenseInfo.url
-        ]),
-        licenseSPDXId: removeNull([ 
-            ghObject.licenseInfo.spdxId
-        ]),
+        license: buildLicense(ghObject),
         repository: removeNull([ 
             ghObject.url
         ]),
         
         topics: buildTopics(ghObject),
         operations: [],
-        authors: removeNull(ghObject.collaborators.nodes.map((node) => node.name)),
+        authors: buildAuthors(ghObject),
         bioschemas: false,
-        contribPolicy: false,
+        contribPolicy: [],
         dependencies: [],
         documentation: [],
         download: [], // This could be package or come from repository contents
@@ -172,7 +198,7 @@ function githubMetadata(ghObject){
         src: [],
         ssl: true,
         tags: [],
-        test: false,
+        test: [],
         type: "",   
     }
 
